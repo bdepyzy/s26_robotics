@@ -1,3 +1,6 @@
+You can use scp or rsync to move files from local laptop to Rosmaster
+
+
 # S26_roboticsII
 ROS2 Workspace for S26 RPI RoboticsII course.
 
