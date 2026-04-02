@@ -75,8 +75,8 @@ class TrackingNode(Node):
         self.GOAL_THRESHOLD = 0.5   # Stop when within 0.5m of goal (increased for braking)
         self.SLOW_DIST = 1.0        # Start slowing at 1.0m
         self.ATTRACTION_GAIN = 0.5  # Attractive force gain
-        self.REPULSION_GAIN = 0.4   # Repulsive force gain
-        self.REPULSION_DIST = 0.65  # Distance at which repulsion activates
+        self.REPULSION_GAIN = 0.6   # Repulsive force gain (increased)
+        self.REPULSION_DIST = 0.9   # Distance at which repulsion activates (increased)
         self.MAX_LINEAR_VEL = 0.3   # Max forward velocity
         self.MAX_ANGULAR_VEL = 0.8  # Max turning velocity
         self.ANGULAR_TOLERANCE = 0.1  # Radians for orientation matching
@@ -178,11 +178,17 @@ class TrackingNode(Node):
         if obs_in_robot is not None:
             obs_dist = np.linalg.norm(obs_in_robot[:2])
             if obs_dist < self.REPULSION_DIST and obs_dist > 0.01:
-                # Repulsive force increases as obstacle gets closer
-                # F_rep = K_rep * (1/d - 1/d0) / d^2
+                # Repulsive force: push AWAY from obstacle
+                # If obstacle is at (ox, oy), force should point in direction (-ox, -oy)
                 repulsion_strength = self.REPULSION_GAIN * (1.0/obs_dist - 1.0/self.REPULSION_DIST) / (obs_dist ** 2)
-                f_rep_x = -repulsion_strength * (obs_in_robot[0] / obs_dist)
-                f_rep_y = -repulsion_strength * (obs_in_robot[1] / obs_dist)
+                # Force points away from obstacle (opposite direction)
+                # Boost lateral avoidance for obstacles to the side
+                lateral_boost = 2.0 if abs(obs_in_robot[1]) > abs(obs_in_robot[0]) else 1.0
+                f_rep_x = -repulsion_strength * obs_in_robot[0] / obs_dist
+                f_rep_y = -repulsion_strength * obs_in_robot[1] / obs_dist * lateral_boost
+
+                # Debug: print what's happening
+                # self.get_logger().info(f'Obs: ({obs_in_robot[0]:.2f}, {obs_in_robot[1]:.2f}) Rep: ({f_rep_x:.2f}, {f_rep_y:.2f})')
         
         # Total force
         f_total_x = f_att_x + f_rep_x
