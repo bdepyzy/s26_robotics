@@ -137,10 +137,12 @@ class TrackingNode(Node):
             goal_in_robot = None
             
             if self.obs_pose is not None:
-                obs_in_robot = robot_world_R @ self.obs_pose + np.array([robot_world_x, robot_world_y, robot_world_z])
+                #obs_in_robot = robot_world_R @ self.obs_pose + np.array([robot_world_x, robot_world_y, robot_world_z])
+                obs_in_robot = robot_world_R.T @ (self.obs_pose - np.array([robot_world_x, robot_world_y, robot_world_z]))
             
             if self.goal_pose is not None:
-                goal_in_robot = robot_world_R @ self.goal_pose + np.array([robot_world_x, robot_world_y, robot_world_z])
+                #goal_in_robot = robot_world_R @ self.goal_pose + np.array([robot_world_x, robot_world_y, robot_world_z])
+                goal_in_robot = robot_world_R.T @ (self.goal_pose - np.array([robot_world_x, robot_world_y, robot_world_z]))
                 
             return obs_in_robot, goal_in_robot
         except TransformException as e:
