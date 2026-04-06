@@ -71,14 +71,13 @@ class TrackingNode(Node):
         # Create timer, running at 100Hz
         self.timer = self.create_timer(0.01, self.timer_update)
         
-        # Potential field parameters
+        # Potential field parameters    
         self.GOAL_THRESHOLD = 0.5   # Stop when within 0.5m of goal (increased for braking)
-        self.SLOW_DIST = 1.0        # Start slowing at 1.0m
-        self.ATTRACTION_GAIN = 0.5  # Attractive force gain
-        self.REPULSION_GAIN = 0.6   # Repulsive force gain (increased)
-        self.REPULSION_DIST = 0.9   # Distance at which repulsion activates (increased)
-        self.MAX_LINEAR_VEL = 0.3   # Max forward velocity
-        self.MAX_ANGULAR_VEL = 0.8  # Max turning velocity
+        self.SLOW_DIST = 2.0        # Start slowing at 2.0m
+        self.ATTRACTION_GAIN = 1.0
+        self.REPULSION_GAIN = 0.7  # ~50–70% of attraction
+        self.REPULSION_DIST = 2 # or even 2.0        self.MAX_LINEAR_VEL = 0.3   # Max forward velocity
+        self.MAX_ANGULAR_VEL = 0.35  # Max turning velocity
         self.ANGULAR_TOLERANCE = 0.1  # Radians for orientation matching
         
         self.get_logger().info('Tracking Node initialized in IDLE state')
@@ -87,7 +86,7 @@ class TrackingNode(Node):
         center_points = np.array([msg.pose.position.x, msg.pose.position.y, msg.pose.position.z])
         
         # Filter: ignore if too far or too high
-        if np.linalg.norm(center_points) > 3 or center_points[2] > 0.7:
+        if np.linalg.norm(center_points) > 4 or center_points[2] > 0.7:
             self.obs_pose = None
             return
         
@@ -141,7 +140,7 @@ class TrackingNode(Node):
                 # lookup_transform(target='base_footprint', source=odom) returns transform T such that
                 # p_robot = R * p_odom + t
                 obs_in_robot = robot_world_R @ self.obs_pose + np.array([robot_world_x, robot_world_y, robot_world_z])
-            
+        
             if self.goal_pose is not None:
                 goal_in_robot = robot_world_R @ self.goal_pose + np.array([robot_world_x, robot_world_y, robot_world_z])
                 
@@ -312,6 +311,12 @@ class TrackingNode(Node):
 
         elif self.state == self.STATE_RETURN_TO_START:
             # Navigate back with obstacle avoidance
+            print("hi")
+            # Get obstacle detection
+
+            obs_in_robot, _ = self.get_poses_in_robot_frame()
+
+
             current_pos, current_yaw = self.get_robot_pose_in_world()
 
             if current_pos is None or current_yaw is None or self.start_position is None:
@@ -319,8 +324,6 @@ class TrackingNode(Node):
                 self.pub_control_cmd.publish(cmd_vel)
                 return
 
-            # Get obstacle detection
-            obs_in_robot, _ = self.get_poses_in_robot_frame()
 
             # Calculate start position in robot frame
             dx = self.start_position[0] - current_pos[0]
@@ -335,7 +338,7 @@ class TrackingNode(Node):
 
             # Check if close to start position
             dist_to_start = np.linalg.norm([dx, dy])
-            if dist_to_start < 0.15:
+            if dist_to_start < 0.3:   # try 0.25–0.4                
                 self.state = self.STATE_ROTATE_TO_START_ORIENTATION
                 self.get_logger().info('At start position! Rotating to match start orientation...')
                 cmd_vel = Twist()

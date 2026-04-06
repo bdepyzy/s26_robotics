@@ -14,9 +14,15 @@ def generate_launch_description():
     cam_package_path = get_package_share_directory('astra_camera')
     yahboomcar_package_path = get_package_share_directory('yahboomcar_bringup')
     
-    astra_camera_launch = IncludeLaunchDescription(XMLLaunchDescriptionSource(
-        [os.path.join(cam_package_path, 'launch'),
-         '/astro_pro_plus.launch.xml'])
+    astra_camera_launch = IncludeLaunchDescription(
+        XMLLaunchDescriptionSource(
+            [os.path.join(cam_package_path, 'launch'),
+            '/astro_pro_plus.launch.xml']
+        ),
+        launch_arguments={
+            'color_enable': 'true',
+            'color_mode': '640x480@30'
+        }.items()
     )
     yahboomcar_brinup_launch = IncludeLaunchDescription(PythonLaunchDescriptionSource(
         [os.path.join(yahboomcar_package_path, 'launch'),
