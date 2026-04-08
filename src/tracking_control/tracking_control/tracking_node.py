@@ -76,7 +76,8 @@ class TrackingNode(Node):
         self.SLOW_DIST = 2.0        # Start slowing at 2.0m
         self.ATTRACTION_GAIN = 1.0
         self.REPULSION_GAIN = 0.7  # ~50–70% of attraction
-        self.REPULSION_DIST = 2 # or even 2.0        self.MAX_LINEAR_VEL = 0.3   # Max forward velocity
+        self.REPULSION_DIST = 2 # or even 2.0        
+        self.MAX_LINEAR_VEL = 0.3   # Max forward velocity
         self.MAX_ANGULAR_VEL = 0.35  # Max turning velocity
         self.ANGULAR_TOLERANCE = 0.1  # Radians for orientation matching
         
@@ -97,6 +98,8 @@ class TrackingNode(Node):
         except TransformException as e:
             return
         
+        self.get_logger().error(f'RAWR:  obstacle at world coordinates ({cp_world[0]:.2f}, {cp_world[1]:.2f}, {cp_world[2]:.2f})')
+
         self.obs_pose = cp_world
 
     def detected_goal_pose_callback(self, msg):
@@ -275,6 +278,8 @@ class TrackingNode(Node):
             return
 
         elif self.state == self.STATE_GO_TO_GOAL:
+            self.get_logger().error(f'RAWR: go to goal')
+
             if self.goal_pose is None:
                 # Lost goal, stop but stay in state
                 cmd_vel = Twist()
@@ -312,6 +317,8 @@ class TrackingNode(Node):
         elif self.state == self.STATE_RETURN_TO_START:
             # Navigate back with obstacle avoidance
             print("hi")
+            self.get_logger().error(f'RAWR: return to start')
+
             # Get obstacle detection
 
             obs_in_robot, _ = self.get_poses_in_robot_frame()
@@ -354,6 +361,8 @@ class TrackingNode(Node):
             self.pub_control_cmd.publish(cmd_vel)
 
         elif self.state == self.STATE_ROTATE_TO_START_ORIENTATION:
+            
+
             # Rotate in place to match starting orientation
             _, current_yaw = self.get_robot_pose_in_world()
 
@@ -389,6 +398,7 @@ class TrackingNode(Node):
             self.pub_control_cmd.publish(cmd_vel)
 
         elif self.state == self.STATE_COMPLETED:
+            
             # Auto-reset to IDLE if goal is detected again (tracking toggled back on)
             if self.goal_pose is not None:
                 self.state = self.STATE_IDLE
