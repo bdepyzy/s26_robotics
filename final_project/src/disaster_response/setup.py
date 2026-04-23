@@ -26,6 +26,7 @@ setup(
             'victim_detector      = disaster_response.victim_detector:main',
             'victim_logger        = disaster_response.victim_logger:main',
             'face_victim_detector = disaster_response.face_victim_detector:main',
+            'debug_image_stream   = disaster_response.debug_image_stream:main',
             'enroll_faces         = disaster_response.enroll_faces:main',
         ],
     },
